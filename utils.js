@@ -60,6 +60,15 @@ module.exports = {
     return str
       .replace('\\n', '\n')
       .replace('\\t', '\t')
-  }
+  },
+
+  /**
+   * @param {string[]} lines 
+   */
+  trim_whitespace_from_every_line(lines) {
+    for(let i = 0; i < lines.length; ++i) {
+      lines[i] = lines[i].trim()
+    }
+  },
 
 }
