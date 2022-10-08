@@ -1,5 +1,6 @@
 const { readFileSync } = require('fs')
 const { randomInt } = require('crypto')
+const { execSync } = require('child_process')
 const { stdout, argv, exit } = process
 
 const script_name = argv[1].substring(1+argv[1].lastIndexOf('/'))
