@@ -25,6 +25,29 @@ module.exports = {
    */
   u32: (n) => Number(BigInt.asUintN(32, BigInt(n))),
 
+  resolve_imm(R, arg3) {
+    try { return this.i32(arg3) }
+    catch(err) { return R[arg3] }
+  },
+
+  i32_add(R, rd, rs, arg3) {
+    R[rd] = R[rs] + this.resolve_imm(R, arg3)
+    this.check_overflow(R[rd])
+  },
+
+  u32_add(R, rd, rs, arg3) {
+    R[rd] = R[rs] + this.resolve_imm(R, arg3)
+  },
+
+  i32_sub(R, rd, rs, arg3) {
+    R[rd] = R[rs] - this.resolve_imm(R, arg3)
+    this.check_overflow(R[rd])
+  },
+
+  u32_sub(R, rd, rs, arg3) {
+    R[rd] = R[rs] - this.resolve_imm(R, arg3)
+  },
+
   /**
    * @param {string[]} args array of strings to sanitize
    */
@@ -48,8 +71,8 @@ module.exports = {
    * @returns {[number, string]} string representing register and amount to increment address by
    */
   get_address_increment(s) {
-    if(!/[0-9]+\([vatsgfr][0-9pat]\)/.test(s)) return
-    return [s.substring(1+s.indexOf('('),s.indexOf(')')), this.i32(s[0])]
+    if(!/[0-9]+\((\$)?[vatsgfr][0-9pat]\)/.test(s)) return
+    return [s.substring(1+s.indexOf('('),s.indexOf(')')), this.i32(s.substring(0, s.indexOf('(')))]
   },
 
   /**
@@ -71,4 +94,27 @@ module.exports = {
     }
   },
 
+  /**
+   * @param {string} cause string containing cause of error
+   * @return process will be terminated
+   */
+  error_and_exit(cause, line_no, line) {
+    console.log(`ERROR! Cause: ${cause}\nLine ${line_no}:\t${line}`)
+    process.exit(1)
+  },
+
+  /**
+   * @param {number} n
+   */
+  check_overflow(n) {
+    if(n > 2**31 - 1 || n < -(2**31-2)) throw 'Arithmetic overflow'
+  },
+
+  /**
+   * @param {string[]} arr 
+   */
+  remove_empty_strings(arr) {
+    while(arr.includes(''))
+      arr.splice(arr.indexOf(''), 1)
+  }
 }

@@ -7,9 +7,17 @@
 main:
   move $s0, $ra
 
-  li $a0, 123
+  li $t0, 123
+  li $t1, 999
+
+  move $a0, $t0
   jal print_int
-  li $a0, 999
+  move $a0, $t1
+  jal print_int
+
+  mult $t0, $t1
+  mflo $t2
+  move $a0, $t2
   jal print_int
 
   move $ra, $s0

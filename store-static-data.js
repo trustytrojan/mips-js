@@ -10,8 +10,10 @@ const utils = require('./utils')
  */
 module.exports = function(i, R, M, lines, data_labels) {
   for(; lines[i] !== '.text'; ++i) {
-    if(!lines[i].length) continue
-    let str = lines[i].split(' ')
+    const line = lines[i]
+    if(!line.length || line.startsWith('#') || line.startsWith('.')) continue
+    let str = line.split(' ')
+    utils.remove_empty_strings(str)
     const label = str.shift()
     const type = str.shift()
     let value = str.join(' ').replaceAll('"', '')

@@ -1,4 +1,4 @@
-const { argv, exit } = process
+const { argv, exit, stdin } = process
 const utils = require('./utils')
 
 const script_name = argv[1].substring(1+argv[1].lastIndexOf('/'))
@@ -11,22 +11,25 @@ if(argv.length < 3) {
 let debug = (argv[2] === '--debug')
 let source_file = (debug) ? argv[3] : argv[2]
 
-let pc // program counter - cpu reads the instruction at this address
-let hi // high 32 bits from multiplication
-let lo // low 32 bits from multiplication
-let ll_bit // indicates if we are in a read-modify-write (RMW) sequence
+const _ = {
+  pc: 0, // program counter - cpu reads the instruction at this address
+  hi: 0, // high 32 bits from multiplication
+  lo: 0, // low 32 bits from multiplication
+  text: 0 // start of text section (code)
+}
 
 // entire MIPS memory space
 const M = Buffer.alloc(0x10000)
 
 // registers
 const R = utils.create_register_obj()
-R.ra = -1
 R.gp = 0
-R.sp = R.fp = M.byteLength-1
+R.sp = R.fp = M.byteLength-4
 
 // read all code into string array
 const lines = require('fs').readFileSync(source_file).toString().split('\n')
+
+R.ra = lines.length
 
 // trim leading and trailing whitespace from all lines
 utils.trim_whitespace_from_every_line(lines)
@@ -45,7 +48,7 @@ for(let i = 0; i < lines.length; ++i) {
     require('./store-static-data')(i, R, M, lines, data_labels)
 
   if(line === '.text') {
-    pc = i+1 // set pc to first line of code
+    _.text = i // set _.pc to first line of code
   }
   
   if(line.endsWith(':'))
@@ -53,21 +56,19 @@ for(let i = 0; i < lines.length; ++i) {
 }
 
 // get MIPS_Instructions object
-const instructions = new (require('./instructions'))(R, M, labels, data_labels, hi, lo, pc, ll_bit)
+const instructions = new (require('./instructions'))(_, R, M, labels, data_labels)
 
 // main instruction processing loop
 async function main() {
-  for(;;) {
-    const line = lines[pc++]
-    if(!line || line.length === 0 || line.includes(':') || line.startsWith('#') || line.startsWith('.')) continue
+  _.pc = _.text
+  do {
+    if(_.pc >= lines.length) exit(0)
+    const line = lines[_.pc]
+    if(!line || line.length === 0 || line.startsWith('#') || line.startsWith('.') || line.endsWith(':')) continue
+    // console.log(`${_.pc+1}:`, line)
     try { await instructions.parse_and_run(line) }
-    catch(err) {
-      console.error(err)
-    }
-  }
+    catch(err) { console.error(err); utils.error_and_exit(err, _.pc+1, line) }
+  } while(_.pc++ > 0)
 }
 
-if(debug)
-  require('./debug')(R, lines, instructions, pc)
-else
-  main()
+main()
