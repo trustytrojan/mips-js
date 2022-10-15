@@ -3,7 +3,6 @@
   tab: .asciiz "\t"
 
 .text
-
 main:
   move $s0, $ra
 

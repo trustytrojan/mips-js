@@ -39,6 +39,11 @@ module.exports = function(i, R, M, lines, data_labels) {
         value = Number.parseFloat(value)
         if(isNaN(value)) error_and_exit(`Static data label "${label}" is not a floating point number`)
         R.gp += M.writeFloatBE(value, R.gp)
+        break
+      default:
+        console.error(`Syntax error: not a static data entry. Aborting.`)
+        console.error(`\tLine ${i+1}: "${line}"`)
+        process.exit(1)
     }
   }
 }
