@@ -3,7 +3,7 @@ const { u32, i32 } = utils
 const { stdout, exit } = process
 const { input } = require('./input')
 
-module.exports = class MIPS_Instructions {
+module.exports = class MIPS {
 
   // declare private field
   #instructions
@@ -85,19 +85,11 @@ module.exports = class MIPS_Instructions {
       bne([ rs, rt, label ]) { if(R[rs] !== R[rt]) _.pc = labels.get(label) },
       lbu([ rt, arg2 ]) { R[rt] = M.readUInt8(addr_get(arg2)) },
       lhu([ rt, arg2 ]) { R[rt] = M.readUInt16BE(addr_get(arg2)) },
-      // ll([ rt, arg2 ]) { this.lw([ rt, arg2 ]) },
       lui([ rt, imm ]) { R[rt] = i32(imm) << 16n },
-      lw([ rt, arg2 ]) {
-        R[rt] = M.readInt32BE(addr_get(arg2))
-        // console.log(`\tLW: $${rt} = ${R[rt]}`)
-      },
+      lw([ rt, arg2 ]) { R[rt] = M.readInt32BE(addr_get(arg2)) },
       sb([ rt, arg2 ]) { M[addr_get(arg2)] = R[rt] },
-      // sc([ rt, arg2 ]) { this.sw([ rt, arg2 ]) },
       sh([ rt, arg2 ]) { M.writeInt16BE(R[rt], addr_get(arg2)) },
-      sw([ rt, arg2 ]) {
-        M.writeInt32BE(R[rt], addr_get(arg2))
-        // console.log(`\tSW: M[${addr_get(arg2)}] = ${R[rt]}`)
-      },
+      sw([ rt, arg2 ]) { M.writeInt32BE(R[rt], addr_get(arg2)) },
       add([ rd, rs, rt ]) { utils.i32_add(R, rd, rs, rt) },
       addi([ rd, rs, imm ]) { utils.i32_add(R, rd, rs, imm) },
       addu([ rd, rs, rt ]) { utils.u32_add(R, rd, rs, rt) },
@@ -114,10 +106,7 @@ module.exports = class MIPS_Instructions {
       and([ rd, rs, rt ]) { R[rd] = R[rs] & R[rt] },
       andi([ rd, rs, imm ]) { R[rd] = R[rs] & u32(imm) },
       li([ rd, imm ]) { R[rd] = Number.parseInt(imm) },
-      move([ rd, rs ]) {
-        R[rd] = R[rs]
-        // console.log(`\t$${rd} = ${R[rd]}`)
-      }
+      move([ rd, rs ]) { R[rd] = R[rs] }
     }
   }
 
